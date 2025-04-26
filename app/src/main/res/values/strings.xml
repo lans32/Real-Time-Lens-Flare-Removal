@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lens Flare Removal</string>
+    <string name="start_camera">Запустить камеру</string>
+    <string name="stop_camera">Остановить камеру</string>
+    <string name="processing">Обработка...</string>
+    <string name="error_camera">Ошибка при запуске камеры</string>
+    <string name="error_permission">Требуется разрешение на использование камеры</string>
+</resources> 
