@@ -49,4 +49,42 @@ lint/tmp/
 
 # OpenCV SDK
 OpenCV-android-sdk/
-opencv/ 
+opencv/
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Data directory
+data/
+
+# Gradle wrapper
+gradle/wrapper/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp 
+
+# TensorFlow
+tensorflow/
+tensorflow-hub/
+tensorflow-metal/
+tensorflow-metal-macos/
+tensorflow-metal-macos-arm64/
+tensorflow-metal-macos-arm64-simulator/
+tensorflow-metal-macos-x86_64/
+tensorflow-metal-macos-x86_64-simulator/
+tensorflow-metal-macos-arm64-simulator/
+tensorflow-metal-macos-x86_64-simulator/
+tensorflow-metal-macos-arm64-simulator/
+tensorflow-metal-macos-x86_64-simulator/
+
+#venv
+venv/
+
+#env
+.env
