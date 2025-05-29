@@ -88,3 +88,7 @@ venv/
 
 #env
 .env
+
+#модели
+specular-removal/
+model_specular_removal.ptl

@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
                 Log.d("Camera", "Camera provider obtained")
                 
                 val preview = Preview.Builder().build()
-                lensFlareAnalyzer = LensFlareAnalyzer(isFlareRemovalEnabled) { bitmap ->
+                lensFlareAnalyzer = LensFlareAnalyzer(isFlareRemovalEnabled, applicationContext) { bitmap ->
                     runOnUiThread {
                         processedImageView.setImageBitmap(bitmap)
                         processedImageView.scaleType = ImageView.ScaleType.CENTER_CROP
@@ -179,9 +179,10 @@ class MainActivity : ComponentActivity() {
 
 class LensFlareAnalyzer(
     private var isFlareRemovalEnabled: Boolean,
+    private val context: android.content.Context,
     private val onImageProcessed: (Bitmap) -> Unit
 ) : ImageAnalysis.Analyzer {
-    private val processor = LensFlareProcessor()
+    private val processor = LensFlareProcessor(context)
     
     fun updateMode(enabled: Boolean) {
         isFlareRemovalEnabled = enabled
@@ -293,6 +294,6 @@ class LensFlareAnalyzer(
     }
     
     fun release() {
-        // Implementation needed
+        processor.release()
     }
 } 
