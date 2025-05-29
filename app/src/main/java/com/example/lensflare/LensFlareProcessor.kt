@@ -53,6 +53,10 @@ class LensFlareProcessor(private val context: Context) {
             val targetHeight: Int
             val targetWidth: Int
 
+            // Устанавливаем фиксированный меньший размер для ускорения
+            targetHeight = 128
+            targetWidth = 128
+            /* Закомментируем динамическое определение размера
             if (originalHeight < 250) { // В infer.py используется высота (img.shape[2])
                 targetHeight = 224
                 targetWidth = 224
@@ -60,19 +64,20 @@ class LensFlareProcessor(private val context: Context) {
                 targetHeight = 448
                 targetWidth = 448
             }
+            */
             Log.d("LensFlareProcessor", "Original size: ${originalWidth}x${originalHeight}, Target model size: ${targetWidth}x${targetHeight}")
 
             // Масштабируем Bitmap до целевого размера
             val scaledBitmap = Bitmap.createScaledBitmap(inputBitmapARGB, targetWidth, targetHeight, true)
 
             // ЛОГИРОВАНИЕ: Проверим несколько пикселей из scaledBitmap
-            val BmpW = scaledBitmap.width
+            /*val BmpW = scaledBitmap.width
             val BmpH = scaledBitmap.height
             if (BmpW > 4 && BmpH > 4) {
                 Log.d("LensFlareProcessor_BMP", "scaledBitmap (TopLeft 2x2 pixels, ARGB Int): " +
                         "[${scaledBitmap.getPixel(0,0)}, ${scaledBitmap.getPixel(1,0)}]" +
                         " [${scaledBitmap.getPixel(0,1)}, ${scaledBitmap.getPixel(1,1)}]")
-            }
+            }*/
 
             // Конвертируем масштабированный Bitmap в тензор
             // Новый способ: ручная нормализация для получения [0,1]
@@ -94,7 +99,7 @@ class LensFlareProcessor(private val context: Context) {
             val hwcFloatArrayOriginalScale = FloatArray(numElementsTensor)
             floatBuffer.rewind()
             floatBuffer.get(hwcFloatArrayOriginalScale)
-            Log.d("LensFlareProcessor_DATA", "HWC FloatArray (0-255 scale, first 15): ${hwcFloatArrayOriginalScale.sliceArray(0..14).contentToString()}")
+            // Log.d("LensFlareProcessor_DATA", "HWC FloatArray (0-255 scale, first 15): ${hwcFloatArrayOriginalScale.sliceArray(0..14).contentToString()}")
 
             // Шаг 2: Ручная нормализация [0-255] -> [0,1] и конвертация HWC -> CHW
             val chwFloatArrayNormalized = FloatArray(numElementsTensor)
@@ -114,7 +119,7 @@ class LensFlareProcessor(private val context: Context) {
             Log.d("LensFlareProcessor", "Input tensor created with shape: ${inputTensor.shape().contentToString()}")
             // ЛОГИРОВАНИЕ: Проверим новый inputData
             val newTempInputData = inputTensor.dataAsFloatArray
-            Log.d("LensFlareProcessor_DATA", "New Input Tensor Data (first 15 after manual norm): ${newTempInputData.sliceArray(0..14).contentToString()}")
+            // Log.d("LensFlareProcessor_DATA", "New Input Tensor Data (first 15 after manual norm): ${newTempInputData.sliceArray(0..14).contentToString()}")
 
             // 2. Запуск модели
             Log.d("LensFlareProcessor", "Запуск модели specular-removal...")
@@ -145,6 +150,7 @@ class LensFlareProcessor(private val context: Context) {
             val hfData = hfTensor.dataAsFloatArray // values are [0,1] (HFE output usually is, or needs clamping/sigmoid)
 
             // ЛОГИРОВАНИЕ: Выведем несколько значений из каждого тензора
+            /*
             Log.d("LensFlareProcessor_DATA", "Input Tensor (first 5): ${inputData.sliceArray(0..4).contentToString()}")
             Log.d("LensFlareProcessor_DATA", "SecondOut Tensor (first 5): ${secondOutData.sliceArray(0..4).contentToString()}")
             Log.d("LensFlareProcessor_DATA", "HF Tensor (first 5): ${hfData.sliceArray(0..4).contentToString()}")
@@ -153,6 +159,7 @@ class LensFlareProcessor(private val context: Context) {
             val hfMax = hfData.maxOrNull() ?: 0.0f
             val hfAvg = hfData.average().toFloat()
             Log.d("LensFlareProcessor_DATA", "HF Tensor Stats: Min=$hfMin, Max=$hfMax, Avg=$hfAvg")
+            */
 
             val numElements = (1 * 3 * targetHeight * targetWidth).toInt()
             val finalPixelData = FloatArray(numElements)
@@ -176,7 +183,7 @@ class LensFlareProcessor(private val context: Context) {
             
 
             // ЛОГИРОВАНИЕ: Выведем несколько значений из finalPixelData до зажима
-            Log.d("LensFlareProcessor_DATA", "FinalPixelData (before clamp, first 5): ${finalPixelData.sliceArray(0..4).contentToString()}")
+            // Log.d("LensFlareProcessor_DATA", "FinalPixelData (before clamp, first 5): ${finalPixelData.sliceArray(0..4).contentToString()}")
 
             // Убедимся, что значения в finalPixelData находятся в диапазоне [0,1]
             for (i in 0 until numElements) {
@@ -215,7 +222,7 @@ class LensFlareProcessor(private val context: Context) {
                 }
             }
             // ЛОГИРОВАНИЕ: Выведем несколько первых пикселей (в формате Int)
-            Log.d("LensFlareProcessor_DATA", "OutputPixels (first 5): ${outputPixels.sliceArray(0..4).contentToString()}")
+            // Log.d("LensFlareProcessor_DATA", "OutputPixels (first 5): ${outputPixels.sliceArray(0..4).contentToString()}")
 
             outputBitmap.setPixels(outputPixels, 0, targetWidth, 0, 0, targetWidth, targetHeight)
             Log.d("LensFlareProcessor", "Output bitmap created from processed float array.")

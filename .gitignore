@@ -92,3 +92,4 @@ venv/
 #модели
 specular-removal/
 model_specular_removal.ptl
+app/src/main/assets/model_specular_removal_quantized.ptl
