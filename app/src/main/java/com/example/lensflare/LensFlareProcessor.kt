@@ -75,25 +75,41 @@ class LensFlareProcessor(private val context: Context) {
             }
 
             // Конвертируем масштабированный Bitmap в тензор
-            // Используем TensorImageUtils для нормализации [0,255] -> [0,1] и конвертации в CHW
+            // Новый способ: ручная нормализация для получения [0,1]
             val numElementsTensor = 3 * targetHeight * targetWidth
-            val floatBuffer = Tensor.allocateFloatBuffer(numElementsTensor) // Буфер для CHW данных
-
+            val floatBuffer = Tensor.allocateFloatBuffer(numElementsTensor)
+            
+            // Шаг 1: Получить значения пикселей как Float [0-255] используя bitmapToFloatBuffer
+            // mean=[0,0,0], std=[1,1,1] должен просто конвертировать байты в float без изменения масштаба.
             TensorImageUtils.bitmapToFloatBuffer(
                 scaledBitmap,
-                0, 0, targetWidth, targetHeight,
-                floatArrayOf(0.0f, 0.0f, 0.0f),     // normMeanRGB (среднее значение для вычитания)
-                floatArrayOf(255.0f, 255.0f, 255.0f), // normStdRGB (делитель для нормализации в [0,1])
-                floatBuffer,
-                0,
-                MemoryFormat.CHANNELS_FIRST          // Выходной формат CHW
+                0, 0, targetWidth, targetHeight, 
+                floatArrayOf(0.0f, 0.0f, 0.0f), // normMeanRGB
+                floatArrayOf(1.0f, 1.0f, 1.0f), // normStdRGB
+                floatBuffer, 
+                0, 
+                MemoryFormat.CHANNELS_LAST // Выход HWC
             )
-            // floatBuffer теперь содержит CHW данные, нормализованные в [0,1].
-            // Важно сбросить позицию буфера перед созданием тензора.
+            
+            val hwcFloatArrayOriginalScale = FloatArray(numElementsTensor)
             floatBuffer.rewind()
+            floatBuffer.get(hwcFloatArrayOriginalScale)
+            Log.d("LensFlareProcessor_DATA", "HWC FloatArray (0-255 scale, first 15): ${hwcFloatArrayOriginalScale.sliceArray(0..14).contentToString()}")
 
-            val inputTensor = Tensor.fromBlob(floatBuffer, longArrayOf(1, 3, targetHeight.toLong(), targetWidth.toLong()))
-            // Удалены hwcFloatArrayOriginalScale, chwFloatArrayNormalized и ручной цикл конвертации/нормализации
+            // Шаг 2: Ручная нормализация [0-255] -> [0,1] и конвертация HWC -> CHW
+            val chwFloatArrayNormalized = FloatArray(numElementsTensor)
+            for (h in 0 until targetHeight) {
+                for (w in 0 until targetWidth) {
+                    for (c in 0 until 3) {
+                        val hwcIndex = (h * targetWidth + w) * 3 + c
+                        val chwIndex = (c * targetHeight + h) * targetWidth + w
+                        // Нормализуем делением на 255.0f
+                        chwFloatArrayNormalized[chwIndex] = hwcFloatArrayOriginalScale[hwcIndex]
+                    }
+                }
+            }
+
+            val inputTensor = Tensor.fromBlob(chwFloatArrayNormalized, longArrayOf(1, 3, targetHeight.toLong(), targetWidth.toLong()))
 
             Log.d("LensFlareProcessor", "Input tensor created with shape: ${inputTensor.shape().contentToString()}")
             // ЛОГИРОВАНИЕ: Проверим новый inputData
