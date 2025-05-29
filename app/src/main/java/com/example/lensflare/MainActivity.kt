@@ -294,6 +294,6 @@ class LensFlareAnalyzer(
     }
     
     fun release() {
-        processor.release()
+        // processor.release() // Удаляем этот вызов, т.к. LensFlareProcessor.release() больше не существует
     }
 } 
